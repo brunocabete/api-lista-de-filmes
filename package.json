@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "ts-node src/index.ts",
-    "swagger": "ts-node ./swagger.js"
+    "swagger": "ts-node ./docs/swagger.js"
   },
   "dependencies": {
     "@prisma/client": "6.3.0",
