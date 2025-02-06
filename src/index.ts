@@ -1,7 +1,10 @@
 const express = require('express');
+import { AxiosResponse } from 'axios';
 import apiClient from '../axios/axios-config'
 const logger = require('./middlewares/logger')
 const app = express()
+import { PrismaClient, Prisma } from '@prisma/client'
+const prisma = new PrismaClient()
 
 const fun1 = (arg) => {
     arg.req.hello = 123
@@ -21,13 +24,29 @@ app.get('/', async (req, res) => {
     //         'query': 'el camino'
     //     }
     // })
-    console.log(req);
+
     res.json('ok')
 })
 
 //    - `POST /filme` → Adiciona um filme à lista de desejos. Busca informações na API externa e gera um identificador único.
 app.post('/filme', async (req, res) => {
 
+    const apiResponse = await apiClient.get<MovieDBMovie>('/search/movie', {
+        params: {
+            'query': req.nomeDoFilme
+        }
+    })
+    const movieData: MovieDBMovie = apiResponse.data[0];
+    let filme: Prisma.FilmeCreateInput = {
+        moviedbId: 0,
+        titulo: movieData.title,
+        sinopse: movieData.overview,
+        assistido: false,
+        avaliado: 0,
+        recomendado: false
+    };
+    prisma.filme.create({ data: filme })
+    console.log(req);
 })
 
 

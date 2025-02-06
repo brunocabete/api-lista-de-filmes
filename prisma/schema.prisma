@@ -8,18 +8,16 @@ datasource db {
 }
 
 model Filme {
-    id        Int            @id @default(autoincrement())
-    moviedbId Int
-    titulo    String
-    sinopse   String
-    createdAt DateTime       @default(now())
-    generos   Filme_Genero[]
-    assistido Boolean
-    avaliado Int
-    recomendado Boolean
+    id          Int            @id @default(autoincrement())
+    moviedbId   Int
+    titulo      String
+    sinopse     String
+    createdAt   DateTime       @default(now())
+    generos     Filme_Genero[]
+    assistido   Boolean        @default(false)
+    avaliado    Int?
+    recomendado Boolean?
 }
-
-
 
 model Genero {
     id     Int            @id @default(autoincrement())
