@@ -1,0 +1,10 @@
+-- CreateTable
+CREATE TABLE "Log" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "metodo" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
+    "statusResposta" INTEGER NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "filmeId" INTEGER,
+    CONSTRAINT "Log_filmeId_fkey" FOREIGN KEY ("filmeId") REFERENCES "Filme" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+);

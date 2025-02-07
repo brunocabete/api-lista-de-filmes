@@ -1,9 +1,9 @@
 const express = require('express');
-import { AxiosResponse } from 'axios';
 import apiClient from '../axios/axios-config'
 const logger = require('./middlewares/logger')
 const app = express()
-import { PrismaClient, Prisma } from '@prisma/client'
+import { PrismaClient, Prisma, Genero } from '@prisma/client'
+import { MovieDBMovie } from './Interfaces/MovieDBMovie';
 const prisma = new PrismaClient()
 
 const fun1 = (arg) => {
@@ -30,23 +30,48 @@ app.get('/', async (req, res) => {
 
 //    - `POST /filme` → Adiciona um filme à lista de desejos. Busca informações na API externa e gera um identificador único.
 app.post('/filme', async (req, res) => {
+    try {
 
-    const apiResponse = await apiClient.get<MovieDBMovie>('/search/movie', {
-        params: {
-            'query': req.nomeDoFilme
-        }
-    })
-    const movieData: MovieDBMovie = apiResponse.data[0];
-    let filme: Prisma.FilmeCreateInput = {
-        moviedbId: 0,
-        titulo: movieData.title,
-        sinopse: movieData.overview,
-        assistido: false,
-        avaliado: 0,
-        recomendado: false
-    };
-    prisma.filme.create({ data: filme })
-    console.log(req);
+        const apiResponse = await apiClient.get<MovieDBMovie>('/search/movie', {
+            params: {
+                'query': encodeURI(req.body.nomeDoFilme),
+                'language': 'pt-br'
+            }
+        })
+
+        const movieData: MovieDBMovie = apiResponse.data;
+        const firstMovie = movieData.results[0];
+
+        const generos: any = await prisma.genero.findMany({
+            where: {
+                id: { in: firstMovie.genre_ids },
+            },
+            select: {
+                id: true
+            }
+        })
+
+        let filme: Prisma.FilmeCreateInput = {
+            moviedbId: firstMovie.id,
+            titulo: `${firstMovie.title} (${firstMovie.original_title})`,
+            sinopse: firstMovie.overview,
+            assistido: false,
+            avaliado: 0,
+            recomendado: false,
+            generos: {
+                connect: [
+                    ...generos
+                ]
+            }
+        };
+        await prisma.filme.create({ data: filme })
+
+        res.status(201).send("Filme inserido")
+
+    } catch (err) {
+        console.log(err)
+        res.status(500).send("Erro ao inserir o filme")
+    }
 })
 
 

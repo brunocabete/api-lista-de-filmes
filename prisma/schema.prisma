@@ -8,28 +8,30 @@ datasource db {
 }
 
 model Filme {
-    id          Int            @id @default(autoincrement())
+    id          Int      @id @default(autoincrement())
     moviedbId   Int
     titulo      String
     sinopse     String
-    createdAt   DateTime       @default(now())
-    generos     Filme_Genero[]
-    assistido   Boolean        @default(false)
+    createdAt   DateTime @default(now())
+    generos     Genero[]
+    assistido   Boolean  @default(false)
     avaliado    Int?
     recomendado Boolean?
+    logs        Log[]
 }
 
 model Genero {
-    id     Int            @id @default(autoincrement())
-    genero String
-    filmes Filme_Genero[]
+    id     Int     @id @default(autoincrement())
+    genero String  @unique
+    filmes Filme[]
 }
 
-model Filme_Genero {
-    filme    Filme  @relation(fields: [filmeId], references: [id])
-    filmeId  Int
-    genero   Genero @relation(fields: [generoId], references: [id])
-    generoId Int
-
-    @@id([filmeId, generoId])
+model Log {
+    id             Int      @id @default(autoincrement())
+    metodo         String
+    url            String
+    statusResposta Int
+    createdAt      DateTime @default(now())
+    filme          Filme?    @relation(fields: [filmeId], references: [id])
+    filmeId        Int?
 }

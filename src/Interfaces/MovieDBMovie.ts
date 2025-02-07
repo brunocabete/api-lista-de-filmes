@@ -1,4 +1,5 @@
-interface MovieDBMovie {
+export interface MovieDBMovie {
+  results: {
     poster_path: string;
     adult: boolean;
     overview: string;
@@ -13,5 +14,5 @@ interface MovieDBMovie {
     vote_count: number;
     video: boolean;
     vote_average: number;
-  }
-  
+  }[]
+}
