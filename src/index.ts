@@ -2,6 +2,7 @@ const express = require('express');
 import apiClient from '../axios/axios-config'
 const logger = require('./middlewares/logger')
 const app = express()
+import { query, validationResult, param } from 'express-validator';
 import { PrismaClient, Prisma, Genero } from '@prisma/client'
 import { MovieDBMovie } from './Interfaces/MovieDBMovie';
 const prisma = new PrismaClient()
@@ -77,7 +78,29 @@ app.post('/filme', async (req, res) => {
 
 //    - `GET /filme` → Lista todos os filmes na lista de desejos.
 app.get('/filme', async (req, res) => {
+    try {
+        const pagina: number = Number(req.query.pagina);
 
+        let skip: number = 0;
+        const take = 10;
+        if (Number.isInteger(pagina) && pagina > 0) {
+            skip = pagina - 1
+            skip = skip * take
+            console.log(skip)
+        }
+        const filmes = await prisma.filme.findMany({
+            take: take,
+            include: {
+                generos: true
+            },
+            skip: skip,
+        })
+        res.set('max-pages', Math.ceil(await prisma.filme.count() / take))
+        res.status(200).json(filmes)
+    } catch (err) {
+        console.log(err)
+        res.status(500).send("falha")
+    }
 })
 
 //    - `GET /filme/:id` → Retorna detalhes de um filme específico.
