@@ -7,14 +7,15 @@
   },
   "dependencies": {
     "@prisma/client": "6.3.0",
+    "@types/express-session": "^1.18.1",
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "express": "4.21.2",
-    "express-validator": "^7.2.1",
+    "express-session": "^1.18.1",
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "@types/express": "5.0.0",
+    "@types/express": "^5.0.0",
     "@types/node": "22.13.1",
     "prisma": "6.3.0",
     "swagger-autogen": "^2.23.7",

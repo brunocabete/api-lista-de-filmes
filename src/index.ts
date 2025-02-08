@@ -2,35 +2,38 @@ const express = require('express');
 import apiClient from '../axios/axios-config'
 const logger = require('./middlewares/logger')
 const app = express()
-import { query, validationResult, param } from 'express-validator';
-import { PrismaClient, Prisma, Genero } from '@prisma/client'
+import { PrismaClient, Prisma, Filme, Log } from '@prisma/client'
 import { MovieDBMovie } from './Interfaces/MovieDBMovie';
+import { log1_geral } from './middlewares/log1_geral';
+import { log2_erro } from './middlewares/log2_erro';
+import { requireAuth } from './middlewares/requireAuth';
+const session = require('express-session');
+
 const prisma = new PrismaClient()
 
-const fun1 = (arg) => {
-    arg.req.hello = 123
-}
-
-const fun2 = (arg) => {
-    arg.req.world = 456
-}
 
 app.use(express.json())
-app.use(logger([fun1, fun2]))
-// 559969
+const logFilmeMiddleware = logger([log1_geral, log2_erro]);
 
-app.get('/', async (req, res) => {
-    // const response = await apiClient.get('/search/movie', {
-    //     params: {
-    //         'query': 'el camino'
-    //     }
-    // })
 
-    res.json('ok')
-})
+app.use(session({
+    secret: 'my-secret-key',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
+}));
 
-//    - `POST /filme` → Adiciona um filme à lista de desejos. Busca informações na API externa e gera um identificador único.
-app.post('/filme', async (req, res) => {
+app.post('/login', (req, res) => {
+    const validCredentials = req.body.password == 'hello';
+    const userId = 1;
+    if (validCredentials) {
+        req.session.userId = userId; // Set session identifier
+        res.status(200).send('Login feito com sucesso')
+    } else {
+        res.status(400).send('Algo deu errado')
+    }
+});
+app.post('/filme', [requireAuth, logFilmeMiddleware], async (req, res) => {
     try {
 
         const apiResponse = await apiClient.get<MovieDBMovie>('/search/movie', {
@@ -57,7 +60,7 @@ app.post('/filme', async (req, res) => {
             titulo: `${firstMovie.title} (${firstMovie.original_title})`,
             sinopse: firstMovie.overview,
             assistido: false,
-            avaliado: 0,
+            avaliado: null,
             recomendado: false,
             generos: {
                 connect: [
@@ -67,17 +70,16 @@ app.post('/filme', async (req, res) => {
         };
         await prisma.filme.create({ data: filme })
 
-        res.status(201).send("Filme inserido")
+        return res.status(201).send("Filme inserido")
 
     } catch (err) {
         console.log(err)
-        res.status(500).send("Erro ao inserir o filme")
+        return res.status(500).send("Erro ao inserir o filme")
     }
 })
 
 
-//    - `GET /filme` → Lista todos os filmes na lista de desejos.
-app.get('/filme', async (req, res) => {
+app.get('/filme', [requireAuth, logFilmeMiddleware], async (req, res) => {
     try {
         const pagina: number = Number(req.query.pagina);
 
@@ -96,37 +98,137 @@ app.get('/filme', async (req, res) => {
             skip: skip,
         })
         res.set('max-pages', Math.ceil(await prisma.filme.count() / take))
-        res.status(200).json(filmes)
+        return res.status(200).json(filmes)
     } catch (err) {
         console.log(err)
-        res.status(500).send("falha")
+        return res.status(500).send("falha")
     }
 })
 
 //    - `GET /filme/:id` → Retorna detalhes de um filme específico.
-app.get('/filme/:id', async (req, res) => {
+app.get('/filme/:id', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    try {
 
+        let filme: Filme = await prisma.filme.findUniqueOrThrow({
+            where: {
+                id: Number(req.params.id)
+            }
+        })
+
+        return res.status(200).json(filme)
+    } catch (err: any) {
+        if (err.code == 'P2025') {
+            return res.status(404).send('Não encontrado')
+        } else {
+            return res.status(500).send('Algo deu errado')
+        }
+
+    }
 })
 
 //    - `PUT /filme/:id/estado` → Move o filme para um novo estado (ex: assistido, avaliado, recomendado).
-app.put('/filme/:id/estado', async (req, res) => {
+app.put('/filme/:id/assistir', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    try {
 
+        await prisma.filme.update(
+            {
+                where: {
+                    id: Number(req.params.id)
+                },
+                data: {
+                    assistido: true
+                }
+            }
+        )
+        return res.status(200).send('assistido')
+    } catch (err) {
+        return res.status(400).send('filme nao encontrado')
+    }
 })
 
-//    - `POST /filme/:id/avaliar` → Avalia o filme com uma nota de 0 a 5.
-app.post('/filme/:id/avaliar', async (req, res) => {
+app.put('/filme/:id/desassistir', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    try {
+        await prisma.filme.update(
+            {
+                where: {
+                    id: Number(req.params.id)
+                },
+                data: {
+                    assistido: false,
+                    recomendado: false,
+                    avaliado: null
+                }
+            }
+        )
+    } catch (err) {
+        console.log(err)
+    }
+})
 
+app.post('/filme/:id/avaliar', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    try {
+        let nota = Number(req.query.nota.replaceAll(',', '.'))
+        if (nota > 5) {
+            nota = 5
+        }
+        if (nota < 0) {
+            nota = 0
+        }
+        let filme: Filme = await prisma.filme.findUniqueOrThrow({
+            where: {
+                id: Number(req.params.id)
+            }
+        })
+        if (filme.assistido == false) {
+            return res.status(422).send('O filme precisa ser assitido antes de ser avaliado')
+        }
+        await prisma.filme.update(
+            {
+                where: {
+                    id: Number(req.params.id)
+                },
+                data: {
+                    avaliado: nota
+                }
+            }
+        )
+        return res.status(200).send('Filme avaliado')
+
+    } catch (err) {
+        console.log(err)
+    }
 })
 
 //    - `GET /filme/:id/historico` → Retorna o histórico completo de um filme.
-app.get('/filme/:id/historico', async (req, res) => {
+app.get('/filme/:id/historico', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    try {
+        const historico = await prisma.log.findMany(
+            {
+                where: {
+                    AND: {
+                        filmeId: Number(req.params.id),
+                        usuarioId: Number(req.session.userId)
+                    }
+                }
+            }
+        )
+        res.status(200).json(historico)
+    } catch (err) {
 
+    }
 })
 
 
 //    - `GET /logs` → Retorna todos os logs registrados (para fins de debug).
 app.get('/logs', async (req, res) => {
+    try {
 
+        const logs: Log[] = await prisma.log.findMany()
+
+        return res.status(200).json(logs)
+    } catch (err) {
+
+    }
 })
 
 const server = app.listen(3000, () =>

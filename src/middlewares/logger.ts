@@ -1,9 +1,10 @@
+
+
 module.exports = function (options) {
     return function (req, res, next) {
-
         const reqResPair = {
             req: req,
-            res: res
+            res: res,
         }
 
         options.forEach(fun => {

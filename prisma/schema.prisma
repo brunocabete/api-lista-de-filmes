@@ -15,7 +15,7 @@ model Filme {
     createdAt   DateTime @default(now())
     generos     Genero[]
     assistido   Boolean  @default(false)
-    avaliado    Int?
+    avaliado    Decimal?
     recomendado Boolean?
     logs        Log[]
 }
@@ -30,8 +30,10 @@ model Log {
     id             Int      @id @default(autoincrement())
     metodo         String
     url            String
-    statusResposta Int
+    statusResposta Int?
     createdAt      DateTime @default(now())
-    filme          Filme?    @relation(fields: [filmeId], references: [id])
+    filme          Filme?   @relation(fields: [filmeId], references: [id])
     filmeId        Int?
+    body           String?
+    usuarioId      Int?
 }
