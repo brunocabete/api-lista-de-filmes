@@ -2,13 +2,12 @@ const swaggerAutogen = require('swagger-autogen')();
 
 const doc = {
   info: {
-    title: 'My API',
-    description: 'Description'
+    title: 'Lista de Filmes API',
   },
   host: 'localhost:3000'
 };
 
 const outputFile = './swagger-output.json';
-const routes = ['../src/index.ts'];
+const routes = ['../index.ts'];
 
 swaggerAutogen(outputFile, routes, doc);

@@ -1,17 +1,18 @@
 const express = require('express');
 import apiClient from '../axios/axios-config'
 const logger = require('./middlewares/logger')
+const swaggerUi = require('swagger-ui-express');
+import swaggerFile from './docs/swagger-output.json';
 const app = express()
 import { PrismaClient, Prisma, Filme, Log } from '@prisma/client'
 import { MovieDBMovie } from './Interfaces/MovieDBMovie';
 import { log1_geral } from './middlewares/log1_geral';
 import { log2_erro } from './middlewares/log2_erro';
 import { requireAuth } from './middlewares/requireAuth';
+import { Args } from '@prisma/client/runtime/library';
 const session = require('express-session');
 
 const prisma = new PrismaClient()
-
-
 app.use(express.json())
 const logFilmeMiddleware = logger([log1_geral, log2_erro]);
 
@@ -22,6 +23,8 @@ app.use(session({
     saveUninitialized: true,
     cookie: { secure: false }
 }));
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
 
 app.post('/login', (req, res) => {
     const validCredentials = req.body.password == 'hello';
@@ -70,11 +73,11 @@ app.post('/filme', [requireAuth, logFilmeMiddleware], async (req, res) => {
         };
         await prisma.filme.create({ data: filme })
 
-        return res.status(201).send("Filme inserido")
+        res.status(201).send("Filme inserido")
 
     } catch (err) {
         console.log(err)
-        return res.status(500).send("Erro ao inserir o filme")
+        res.status(500).send("Erro ao inserir o filme")
     }
 })
 
@@ -82,7 +85,8 @@ app.post('/filme', [requireAuth, logFilmeMiddleware], async (req, res) => {
 app.get('/filme', [requireAuth, logFilmeMiddleware], async (req, res) => {
     try {
         const pagina: number = Number(req.query.pagina);
-
+        console.log(req.query.assistidos)
+        console.log(req.query.assistidos === 'true')
         let skip: number = 0;
         const take = 10;
         if (Number.isInteger(pagina) && pagina > 0) {
@@ -90,18 +94,25 @@ app.get('/filme', [requireAuth, logFilmeMiddleware], async (req, res) => {
             skip = skip * take
             console.log(skip)
         }
-        const filmes = await prisma.filme.findMany({
+        const query: Prisma.FilmeFindManyArgs = {
             take: take,
             include: {
                 generos: true
             },
             skip: skip,
-        })
+        };
+
+        if (req.query.assistidos != undefined) {
+            query.where = {
+                assistido: req.query.assistidos === 'true'
+            }
+        }
+        const filmes = await prisma.filme.findMany(query)
         res.set('max-pages', Math.ceil(await prisma.filme.count() / take))
-        return res.status(200).json(filmes)
+        res.status(200).json(filmes)
     } catch (err) {
         console.log(err)
-        return res.status(500).send("falha")
+        res.status(500).send("falha")
     }
 })
 
@@ -115,12 +126,12 @@ app.get('/filme/:id', [requireAuth, logFilmeMiddleware], async (req, res) => {
             }
         })
 
-        return res.status(200).json(filme)
+        res.status(200).json(filme)
     } catch (err: any) {
         if (err.code == 'P2025') {
-            return res.status(404).send('Não encontrado')
+            res.status(404).send('Não encontrado')
         } else {
-            return res.status(500).send('Algo deu errado')
+            res.status(500).send('Algo deu errado')
         }
 
     }
@@ -140,9 +151,36 @@ app.put('/filme/:id/assistir', [requireAuth, logFilmeMiddleware], async (req, re
                 }
             }
         )
-        return res.status(200).send('assistido')
+        res.status(200).send('assistido')
     } catch (err) {
-        return res.status(400).send('filme nao encontrado')
+        res.status(404).send('filme nao encontrado')
+    }
+})
+
+app.post('/filme/:id/recomendar', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    try {
+        let filme: Filme = await prisma.filme.findUniqueOrThrow({
+            where: {
+                id: Number(req.params.id)
+            }
+        })
+        if (filme.avaliado == null) {
+            res.status(422).send('O filme precisa ser avaliado para ser recomendado')
+        }
+        await prisma.filme.update(
+            {
+                where: {
+                    id: Number(req.params.id)
+                },
+                data: {
+                    recomendado: true
+                }
+            }
+        )
+        res.status(200).send('Filme recomendado')
+
+    } catch (err) {
+        res.status(404).send('Filme não encontrado')
     }
 })
 
@@ -180,7 +218,7 @@ app.post('/filme/:id/avaliar', [requireAuth, logFilmeMiddleware], async (req, re
             }
         })
         if (filme.assistido == false) {
-            return res.status(422).send('O filme precisa ser assitido antes de ser avaliado')
+            res.status(422).send('O filme precisa ser assitido antes de ser avaliado')
         }
         await prisma.filme.update(
             {
@@ -192,7 +230,7 @@ app.post('/filme/:id/avaliar', [requireAuth, logFilmeMiddleware], async (req, re
                 }
             }
         )
-        return res.status(200).send('Filme avaliado')
+        res.status(200).send('Filme avaliado')
 
     } catch (err) {
         console.log(err)
@@ -225,7 +263,7 @@ app.get('/logs', async (req, res) => {
 
         const logs: Log[] = await prisma.log.findMany()
 
-        return res.status(200).json(logs)
+        res.status(200).json(logs)
     } catch (err) {
 
     }
