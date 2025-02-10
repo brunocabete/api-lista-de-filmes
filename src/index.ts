@@ -27,6 +27,13 @@ app.use(session({
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
 
 app.post('/login', (req, res) => {
+    /*  #swagger.parameters['body'] = {
+           in: 'body',
+           description: 'Fazer login',
+           schema: {
+               $password: 'hello',
+           }
+   } */
     const validCredentials = req.body.password == 'hello';
     const userId = 1;
     if (validCredentials) {
@@ -37,6 +44,13 @@ app.post('/login', (req, res) => {
     }
 });
 app.post('/filme', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    /*  #swagger.parameters['body'] = {
+    in: 'body',
+    description: 'Filme a ser inserido',
+    schema: {
+        $nomeDoFilme: 'El Camino',
+    }
+} */
     try {
 
         const apiResponse = await apiClient.get<MovieDBMovie>('/search/movie', {
@@ -83,6 +97,34 @@ app.post('/filme', [requireAuth, logFilmeMiddleware], async (req, res) => {
 
 
 app.get('/filme', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    /* #swagger.responses[200] = {
+              description: 'Lista de filmes',
+              schema: [{
+      "id": 1,
+      "moviedbId": 559969,
+      "titulo": "El Camino: A Breaking Bad Film (El Camino: A Breaking Bad Movie)",
+      "sinopse": "Após sua dramática fuga do cativeiro, Jesse precisa se reconciliar com o passado para que consiga criar algum tipo de futuro. Escrito e dirigido pelo criador de Breaking Bad, Vince Gilligan, e estrelado por Aaron Paul.",
+      "createdAt": "2025-02-09T21:00:46.376Z",
+      "assistido": true,
+      "avaliado": "4",
+      "recomendado": true,
+      "generos": [
+        {
+          "id": 18,
+          "genero": "Drama"
+        },
+        {
+          "id": 53,
+          "genero": "Thriller"
+        },
+        {
+          "id": 80,
+          "genero": "Crime"
+        }
+      ]
+    }]
+      } */
+
     try {
         const pagina: number = Number(req.query.pagina);
         console.log(req.query.assistidos)
@@ -118,6 +160,34 @@ app.get('/filme', [requireAuth, logFilmeMiddleware], async (req, res) => {
 
 //    - `GET /filme/:id` → Retorna detalhes de um filme específico.
 app.get('/filme/:id', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    //  #swagger.parameters['id'] = { description: 'ID do filme.' }
+    /* #swagger.responses[200] = {
+            description: 'Filme retornado',
+            schema: {
+    "id": 1,
+    "moviedbId": 559969,
+    "titulo": "El Camino: A Breaking Bad Film (El Camino: A Breaking Bad Movie)",
+    "sinopse": "Após sua dramática fuga do cativeiro, Jesse precisa se reconciliar com o passado para que consiga criar algum tipo de futuro. Escrito e dirigido pelo criador de Breaking Bad, Vince Gilligan, e estrelado por Aaron Paul.",
+    "createdAt": "2025-02-09T21:00:46.376Z",
+    "assistido": true,
+    "avaliado": "4",
+    "recomendado": true,
+    "generos": [
+      {
+        "id": 18,
+        "genero": "Drama"
+      },
+      {
+        "id": 53,
+        "genero": "Thriller"
+      },
+      {
+        "id": 80,
+        "genero": "Crime"
+      }
+    ]
+  }
+    } */
     try {
 
         let filme: Filme = await prisma.filme.findUniqueOrThrow({
@@ -139,6 +209,7 @@ app.get('/filme/:id', [requireAuth, logFilmeMiddleware], async (req, res) => {
 
 //    - `PUT /filme/:id/estado` → Move o filme para um novo estado (ex: assistido, avaliado, recomendado).
 app.put('/filme/:id/assistir', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    //  #swagger.parameters['id'] = { description: 'ID do filme.' }
     try {
 
         await prisma.filme.update(
@@ -158,6 +229,7 @@ app.put('/filme/:id/assistir', [requireAuth, logFilmeMiddleware], async (req, re
 })
 
 app.post('/filme/:id/recomendar', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    //  #swagger.parameters['id'] = { description: 'ID do filme.' }
     try {
         let filme: Filme = await prisma.filme.findUniqueOrThrow({
             where: {
@@ -185,6 +257,7 @@ app.post('/filme/:id/recomendar', [requireAuth, logFilmeMiddleware], async (req,
 })
 
 app.put('/filme/:id/desassistir', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    //  #swagger.parameters['id'] = { description: 'ID do filme.' }
     try {
         await prisma.filme.update(
             {
@@ -204,6 +277,7 @@ app.put('/filme/:id/desassistir', [requireAuth, logFilmeMiddleware], async (req,
 })
 
 app.post('/filme/:id/avaliar', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    //  #swagger.parameters['id'] = { description: 'ID do filme.' }
     try {
         let nota = Number(req.query.nota.replaceAll(',', '.'))
         if (nota > 5) {
@@ -239,6 +313,25 @@ app.post('/filme/:id/avaliar', [requireAuth, logFilmeMiddleware], async (req, re
 
 //    - `GET /filme/:id/historico` → Retorna o histórico completo de um filme.
 app.get('/filme/:id/historico', [requireAuth, logFilmeMiddleware], async (req, res) => {
+    //  #swagger.parameters['id'] = { description: 'ID do filme.' }
+    /* #swagger.responses[200] = {
+               description: 'Log do filme especifico',
+               schema: [
+           {
+               "id": 6,
+               "metodo": "POST",
+               "url": "/filme/1/recomendar",
+               "statusResposta": 200,
+               "createdAt": "2025-02-09T21:00:55.571Z",
+               "filmeId": 1,
+               "body": "{}",
+               "usuarioId": 1
+           }]
+       } */
+
+
+
+
     try {
         const historico = await prisma.log.findMany(
             {
@@ -259,6 +352,20 @@ app.get('/filme/:id/historico', [requireAuth, logFilmeMiddleware], async (req, r
 
 //    - `GET /logs` → Retorna todos os logs registrados (para fins de debug).
 app.get('/logs', async (req, res) => {
+    /* #swagger.responses[200] = {
+           description: 'Log do filme especifico',
+           schema: [
+       {
+           "id": 6,
+           "metodo": "POST",
+           "url": "/filme/1/recomendar",
+           "statusResposta": 200,
+           "createdAt": "2025-02-09T21:00:55.571Z",
+           "filmeId": 1,
+           "body": "{}",
+           "usuarioId": 1
+       }]
+   } */
     try {
 
         const logs: Log[] = await prisma.log.findMany()

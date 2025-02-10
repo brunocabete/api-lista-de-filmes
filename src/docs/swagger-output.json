@@ -18,13 +18,18 @@
           {
             "name": "body",
             "in": "body",
+            "description": "Fazer login",
             "schema": {
               "type": "object",
               "properties": {
                 "password": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "hello"
                 }
-              }
+              },
+              "required": [
+                "password"
+              ]
             }
           }
         ],
@@ -45,13 +50,18 @@
           {
             "name": "body",
             "in": "body",
+            "description": "Filme a ser inserido",
             "schema": {
               "type": "object",
               "properties": {
                 "nomeDoFilme": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "El Camino"
                 }
-              }
+              },
+              "required": [
+                "nomeDoFilme"
+              ]
             }
           }
         ],
@@ -83,7 +93,66 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Lista de filmes",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "moviedbId": {
+                    "type": "number",
+                    "example": 559969
+                  },
+                  "titulo": {
+                    "type": "string",
+                    "example": "El Camino: A Breaking Bad Film (El Camino: A Breaking Bad Movie)"
+                  },
+                  "sinopse": {
+                    "type": "string",
+                    "example": "Após sua dramática fuga do cativeiro, Jesse precisa se reconciliar com o passado para que consiga criar algum tipo de futuro. Escrito e dirigido pelo criador de Breaking Bad, Vince Gilligan, e estrelado por Aaron Paul."
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "example": "2025-02-09T21:00:46.376Z"
+                  },
+                  "assistido": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "avaliado": {
+                    "type": "string",
+                    "example": "4"
+                  },
+                  "recomendado": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "generos": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 80
+                        },
+                        "genero": {
+                          "type": "string",
+                          "example": "Crime"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -102,12 +171,69 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "ID do filme."
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Filme retornado",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "number",
+                  "example": 1
+                },
+                "moviedbId": {
+                  "type": "number",
+                  "example": 559969
+                },
+                "titulo": {
+                  "type": "string",
+                  "example": "El Camino: A Breaking Bad Film (El Camino: A Breaking Bad Movie)"
+                },
+                "sinopse": {
+                  "type": "string",
+                  "example": "Após sua dramática fuga do cativeiro, Jesse precisa se reconciliar com o passado para que consiga criar algum tipo de futuro. Escrito e dirigido pelo criador de Breaking Bad, Vince Gilligan, e estrelado por Aaron Paul."
+                },
+                "createdAt": {
+                  "type": "string",
+                  "example": "2025-02-09T21:00:46.376Z"
+                },
+                "assistido": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "avaliado": {
+                  "type": "string",
+                  "example": "4"
+                },
+                "recomendado": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "generos": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 80
+                      },
+                      "genero": {
+                        "type": "string",
+                        "example": "Crime"
+                      }
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -129,7 +255,8 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "ID do filme."
           }
         ],
         "responses": {
@@ -153,7 +280,8 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "ID do filme."
           }
         ],
         "responses": {
@@ -180,7 +308,8 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "ID do filme."
           }
         ],
         "responses": {
@@ -198,7 +327,8 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "ID do filme."
           },
           {
             "name": "nota",
@@ -227,12 +357,56 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "ID do filme."
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Log do filme especifico",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "number",
+                    "example": 7
+                  },
+                  "metodo": {
+                    "type": "string",
+                    "example": "PUT"
+                  },
+                  "url": {
+                    "type": "string",
+                    "example": "/filme/1/assistir"
+                  },
+                  "statusResposta": {
+                    "type": "number",
+                    "example": 200
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "example": "2025-02-09T21:01:03.141Z"
+                  },
+                  "filmeId": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "body": {
+                    "type": "string",
+                    "example": "{}"
+                  },
+                  "usuarioId": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"

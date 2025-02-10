@@ -1,4 +1,20 @@
 # api-lista-de-filmes
+
+## Utilização
+1- `docker build -t api-filmes .`
+
+2- `docker run -d -p 3000:3000 -e  api-filmes`
+
+3- Acessar  
+
+
+## Tecnologias
+- Express
+- Axios
+- Prisma ORM
+- Docker
+- Typescript
+
 ## Algumas possíveis melhorias
 - Fazer tipos e interfaces para as respostas (DTO?)
 - Refatoração do arquivo index.ts (mover rotas para outros arquivos)
@@ -14,3 +30,5 @@
 - "Array de funções" é mesmo uma boa solução para expandir um middleware?
     - Como tratam as closures e os escopos? 
     - Como fazer elas serem mais síncronas?
+- Padrão Swagger 2.0 ou OpenAPI 3.0?
+- Testes unitários e de integração
