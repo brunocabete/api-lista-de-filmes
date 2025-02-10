@@ -271,8 +271,9 @@ app.put('/filme/:id/desassistir', [requireAuth, logFilmeMiddleware], async (req,
                 }
             }
         )
+        res.status(200).send('Filme desassistido')
     } catch (err) {
-        console.log(err)
+        res.status(404).send('Filme não encontrado')
     }
 })
 
