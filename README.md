@@ -3,9 +3,13 @@
 ## Utilização
 1- `docker build -t api-filmes .`
 
-2- `docker run -d -p 3000:3000 -e  api-filmes`
+2- `docker run -d -p 3000:3000 -e MOVIEDB_API_TOKEN=<seu token> api-filmes`
 
-3- Acessar  
+3- Acessar http://localhost:3000/docs/
+
+4- Fazer 'login' (só fazer a requisição exemplo)
+
+5- Usar os outros endpoints
 
 
 ## Tecnologias
